@@ -112,7 +112,12 @@ async def start(message: types.Message):
         keyboard = InlineKeyboardMarkup().add(profile_button)
 
         # Если пользователь уже зарегистрирован, выводим ему приветственное сообщение с кнопкой "Мой профиль"
-        await message.reply(f"Привет, {message.from_user.first_name}!", reply_markup=keyboard)
+        await message.reply(f"""Привет, {message.from_user.first_name}!
+Мы рады снова видеть тебя в нашей таверне!
+
+Не знаешь чем занять себя? 
+Сходи к доске объявлений. Ты обязатедбно найдешь для себя что-нибудь подходящее!""", reply_markup=keyboard)
+        await message.answer("Главное меню", reply_markup=get_main_menu_keyboard())
     else:
         # Если пользователь не зарегистрирован, запускаем процесс регистрации
         # await RegistrationForm.waiting_for_firstname.set()
@@ -129,6 +134,17 @@ async def start(message: types.Message):
 Регистрируйся и пускай волна великого захлестнет тебя!""",
                                reply_markup=keyboard)
 
+@dp.callback_query_handler(lambda c: c.data == 'main_menu')
+async def main_menu(callback_query: types.CallbackQuery):
+    profile_button = InlineKeyboardButton("Мой профиль", callback_data='my_profile_info')
+    keyboard = InlineKeyboardMarkup().add(profile_button)
+    await callback_query.message.reply(reply_markup=keyboard)
+    await callback_query.message.answer("Главное меню.", reply_markup=get_main_menu_keyboard())
+
+def get_main_menu_keyboard():
+    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    keyboard.add(types.KeyboardButton(text='Главное меню'))
+    return keyboard
 
 # Функция для удаления пользователя по ID
 def delete_user_by_id(user_id):
