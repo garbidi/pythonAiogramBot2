@@ -1,5 +1,4 @@
 import logging
-import pymysql
 import datetime
 #from datetime import datetime
 from aiogram import Bot, Dispatcher, types
@@ -7,24 +6,10 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from config import bot, dp,db
 
 # Установка уровня логов (DEBUG, INFO, WARNING, ERROR, CRITICAL)
 logging.basicConfig(level=logging.INFO)
-
-# Инициализация бота и диспетчера
-bot = Bot(token="6594265177:AAHTFx_n1PHVANsRr57rSPKuCjxoxQUh6r4")
-dp = Dispatcher(bot, storage=MemoryStorage())
-
-# Конфигурация базы данных
-db = pymysql.connect(
-    host='127.0.0.1',
-    user='root',
-    password='Ilbibek444',
-    db='mydatabase',
-    charset='utf8mb4',
-    cursorclass=pymysql.cursors.DictCursor
-)
-
 
 # Определение стейтов для FSM (Finite State Machine)
 class RegistrationForm(StatesGroup):
@@ -117,7 +102,7 @@ async def start(message: types.Message):
 
 Не знаешь чем занять себя? 
 Сходи к доске объявлений. Ты обязатедбно найдешь для себя что-нибудь подходящее!""", reply_markup=keyboard)
-        await message.answer("Главное меню", reply_markup=get_main_menu_keyboard())
+        #await message.answer("Главное меню", reply_markup=get_main_menu_keyboard())
     else:
         # Если пользователь не зарегистрирован, запускаем процесс регистрации
         # await RegistrationForm.waiting_for_firstname.set()
@@ -153,7 +138,6 @@ def delete_user_by_id(user_id):
         cursor.execute(sql, (user_id,))
         db.commit()
 
-#Не работает. Допилить!!!
 @dp.callback_query_handler(text='edit_profile')
 async def edit_profile_info(callback_query: types.CallbackQuery):
     # Получаем информацию о пользователе из базы данных
@@ -174,7 +158,7 @@ async def edit_profile_info(callback_query: types.CallbackQuery):
     # Отправляем сообщение с текущими данными о профиле и кнопкой "Отмена"
     await bot.send_message(callback_query.from_user.id, info_text,
                            reply_markup=InlineKeyboardMarkup().add(
-                               InlineKeyboardButton("Изменить (не работает)", callback_data='edit_profile_confirm'),
+                               InlineKeyboardButton("Изменить", callback_data='edit_profile_confirm'),
                                InlineKeyboardButton("Отмена", callback_data='cancel_delete')
                            ))
 #Не работает. Допилить!!!
@@ -396,6 +380,34 @@ def register_user(user_id, firstname, lastname, birthday):
         cursor.execute(sql, (user_id,firstname, lastname, birthday, age))
         #cursor.execute(sql, (user_id, firstname, lastname, birthday, age))
         db.commit()
+
+#Это бред
+# @dp.message_handler(content_types=types.ContentType.TEXT)
+# async def get_events(message: types.Message):
+#     city = message.text
+#     events = parse_afisha(city)
+#     if events:
+#         for event in events:
+#      # Форматируйте информацию о мероприятии по вашим потребностям
+#             event_name = event.find("div", class_= "grid_container").get_text()
+#
+#             event_info = f'{event_name}\n'
+#
+#     # Отправьте информацию о мероприятии в Telegram бота
+#         await message.reply(event_info)
+#     else:
+#         await message.reply('Информация о мероприятиях для данного города не найдена.')
+#
+# def parse_afisha(city):
+#     url = f'https://afisha.yandex.ru/{city}/events'
+#     response=requests.get(url)
+#     if response.status_code==200:
+#         soup=BeautifulSoup(response.content,'lxml')
+#         events = soup.find_all('div', class_= "grid_container")
+#         print(events)
+#         return events
+#     else:
+#         return None
 
 # Запуск бота
 if __name__ == '__main__':
