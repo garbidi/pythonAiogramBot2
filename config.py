@@ -1,4 +1,3 @@
-import pymysql
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
@@ -6,12 +5,9 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 bot = Bot(token="6594265177:AAHTFx_n1PHVANsRr57rSPKuCjxoxQUh6r4")
 dp = Dispatcher(bot, storage=MemoryStorage())
 
-# Конфигурация базы данных
-db = pymysql.connect(
-    host='127.0.0.1',
-    user='root',
-    password='Ilbibek444',
-    db='mydatabase',
-    charset='utf8mb4',
-    cursorclass=pymysql.cursors.DictCursor
-)
+url='https://afisha.yandex.ru'
+DRIVER_PATH='C:/Users/iscka/pythonProject/pythonTeleBotT/chromedriver'
+
+
+async def send_list(message:types.Message):
+    pass
