@@ -6,9 +6,9 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from config import bot, dp, url
 from db import check_user_registered, get_user_data,update_user_data, \
-    register_user, check_city_in_db, delete_user_by_id
+    register_user, check_city_in_db, delete_user_by_id, is_city_in_table,\
+    update_user_city_id,get_city_id
 from parse_city import *
-
 
 # Установка уровня логов (DEBUG, INFO, WARNING, ERROR, CRITICAL)
 logging.basicConfig(level=logging.INFO)
@@ -98,6 +98,9 @@ async def start(message: types.Message):
         profile_button = InlineKeyboardButton("Мой профиль", callback_data='my_profile_info')
         keyboard = InlineKeyboardMarkup().add(profile_button)
 
+        button = InlineKeyboardButton('Найти мероприятие', callback_data='find_event')
+        keyboard.add(button)
+
         # Если пользователь уже зарегистрирован, выводим ему приветственное сообщение с кнопкой "Мой профиль"
         await message.reply(f"""Привет, {message.from_user.first_name}!
 Мы рады снова видеть тебя в нашей таверне!
@@ -120,6 +123,25 @@ async def start(message: types.Message):
 
 Регистрируйся и пускай волна великого захлестнет тебя!""",
                                reply_markup=keyboard)
+
+@dp.callback_query_handler(text='find_event')
+async def find_event(callback_query: types.CallbackQuery):
+    await bot.answer_callback_query(callback_query.id)
+    await bot.send_message(callback_query.from_user.id, 'Введите название города')
+
+# Обработчик ввода города
+@dp.message_handler()
+async def handle_city(message: types.Message):
+    city = message.text
+
+    # Проверяем наличие города в таблице
+    if await is_city_in_table(city):
+        # Получите id города из таблицы cities
+        city_id = await get_city_id(city)  # Здесь вам нужно написать свою функцию для получения id города
+        await update_user_city_id(message.from_user.id, city_id)
+        await message.answer(f'Город {city} найден в таблице и id города {city} добавлен в таблицу users!')
+    else:
+        await message.answer(f'Город {city} не найден в таблице.')
 
 @dp.callback_query_handler(text='edit_profile')
 async def edit_profile_info(callback_query: types.CallbackQuery):
@@ -303,8 +325,10 @@ async def process_birthday(message: types.Message, state: FSMContext):
     await state.finish()
 
     # Создаём кнопку "Мой профиль"
+    button = InlineKeyboardButton('Найти мероприятие', callback_data='find_event')
     profile_button = InlineKeyboardButton("Мой профиль", callback_data='my_profile_info')
     keyboard = InlineKeyboardMarkup().add(profile_button)
+    keyboard.add(button)
 
     await message.reply("Поздравляю, вы успешно зарегистрированы!", reply_markup=keyboard)
 

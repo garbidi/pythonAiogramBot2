@@ -14,10 +14,55 @@ db = pymysql.connect(
     charset='utf8mb4',
     cursorclass = pymysql.cursors.DictCursor
 )
-p = ParseWebBro(url)
-page_code = p.open_page_today()
-p.del_connect()
-city_dict=AnalyzeCode(page_code).collect_event_today()
+
+async def get_city_id(city):
+    # Создаем SQL-запрос для получения id города из таблицы cities
+    query = f"SELECT id_city FROM city WHERE city_name = '{city}'"
+
+    try:
+        # Исполняем запрос
+        with db.cursor() as cursor:
+            cursor.execute(query)
+            result = cursor.fetchone()
+
+        # Если город найден, возвращаем его id
+        if result:
+            return result['id_city']
+        else:
+            return None
+    except Exception as e:
+        print(f'Error: {e}')
+
+async def update_user_city_id(user_id, city_id):
+    # Создаем SQL-запрос для обновления столбца city_id в таблице users
+    query = f"UPDATE users SET city_id = {city_id} WHERE id = {user_id}"
+
+    try:
+        # Исполняем запрос
+        with db.cursor() as cursor:
+            cursor.execute(query)
+        # Подтверждаем изменения в базе данных
+        db.commit()
+    except Exception as e:
+        print(f'Error: {e}')
+
+async def is_city_in_table(city):
+    # Создаем SQL-запрос для проверки наличия города в таблице
+    query = f"SELECT * FROM city WHERE city_name = '{city}'"
+
+    try:
+        # Исполняем запрос
+        with db.cursor() as cursor:
+            cursor.execute(query)
+            result = cursor.fetchone()
+
+        # Если город найден, возвращаем True, иначе False
+        if result:
+            return True
+        else:
+            return False
+    except Exception as e:
+        print(f'Error: {e}')
 
 # Функция проверки есть ли город в БД
 def check_city_in_db(city_dict):
